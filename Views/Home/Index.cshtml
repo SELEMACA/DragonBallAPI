@@ -1,0 +1,82 @@
+﻿@{
+    ViewData["Title"] = "Home";
+    // Lista de imágenes disponibles en wwwroot/images (ajusta nombres si cambian)
+    var imgs = new[] {
+        Url.Content("~/images/1.jpg"),
+        Url.Content("~/images/2.jpg"),
+        Url.Content("~/images/3.jpg"),
+          Url.Content("~/images/4.jpg"),
+        Url.Content("~/images/5.jpg"),
+        Url.Content("~/images/6.jpg")
+    };
+}
+
+<section class="container">
+    <!-- HERO centrado -->
+    <header class="text-center" style="margin: 18px 0 8px">
+        <h1 class="dbz-title">¡Bienvenido al Universo Dragon Ball Z!</h1>
+        <p class="dbz-subtitle">Explora planetas, conoce personajes y revive las batallas más épicas.</p>
+    </header>
+
+    <!-- Marco DBZ de la imagen principal -->
+    <!-- Carrusel / Galería -->
+    <section class="dbz-gallery" aria-label="Galería DBZ">
+        <div class="dbz-carousel" id="dbzCarousel">
+            <button class="nav prev" aria-label="Anterior">←</button>
+
+            <div class="track">
+                @for (int i = 0; i < imgs.Length; i++)
+                {
+                    var src = imgs[i];
+                    <img class="slide @(i == 0 ? "active" : "")" src="@src" alt="Imagen @i" loading="lazy" />
+                }
+            </div>
+
+            <button class="nav next" aria-label="Siguiente">→</button>
+        </div>
+
+        <div class="thumbs" id="dbzThumbs">
+            @for (int i = 0; i < imgs.Length; i++)
+            {
+                var src = imgs[i];
+                <button class="thumb @(i == 0 ? "active" : "")" data-idx="@i" aria-label="Miniatura @i">
+                    <img src="@src" alt="Miniatura @i" loading="lazy" />
+                </button>
+            }
+        </div>
+    </section>
+
+    <div class="mt-4" style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap">
+        <a class="dbz-btn" asp-controller="DragonBallPlanets" asp-action="Index">🌍 Explorar Planetas</a>
+        <a class="dbz-btn blue" asp-controller="Home" asp-action="Privacy">ℹ️ Más información</a>
+    </div>
+
+</section>
+
+@section Scripts {
+    <script>
+        (function(){
+          const root = document.getElementById('dbzCarousel');
+          if(!root) return;
+          const slides = Array.from(root.querySelectorAll('.slide'));
+          const btnPrev = root.querySelector('.prev');
+          const btnNext = root.querySelector('.next');
+          const thumbs  = Array.from(document.getElementById('dbzThumbs')?.querySelectorAll('.thumb') || []);
+          let idx = slides.findIndex(s => s.classList.contains('active'));
+          if(idx < 0) idx = 0;
+
+          function show(i){
+            idx = (i + slides.length) % slides.length;
+            slides.forEach((s, j) => s.classList.toggle('active', j === idx));
+            thumbs.forEach((t, j) => t.classList.toggle('active', j === idx));
+          }
+          btnPrev?.addEventListener('click', () => show(idx-1));
+          btnNext?.addEventListener('click', () => show(idx+1));
+          thumbs.forEach(t => t.addEventListener('click', () => show(parseInt(t.dataset.idx || "0", 10))));
+ 
+          let t = setInterval(() => show(idx+1), 5000);
+          root.addEventListener('mouseenter', () => clearInterval(t));
+          root.addEventListener('mouseleave', () => t = setInterval(() => show(idx+1), 5000));
+        })();
+    </script>
+}

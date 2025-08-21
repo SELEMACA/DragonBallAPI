@@ -1,0 +1,63 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - DragonBall Z</title>
+
+    <!-- Fuentes DBZ-like -->
+    <link href="https://fonts.googleapis.com/css2?family=Anton:wght@400&family=Bangers&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+    <!-- 1) Base framework -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <!-- 2) Estilos base del proyecto -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/DragonBallZ.styles.css" asp-append-version="true" />
+
+    <!-- 3) Tema final (gana la cascada) -->
+    <link rel="stylesheet" href="~/css/dbz-theme.css" asp-append-version="true" />
+</head>
+
+<body class="dbz">
+    <!-- NAVBAR -->
+    <header class="dbz-nav">
+        <nav class="container dbz-nav-inner" aria-label="Principal">
+            <a class="dbz-brand" asp-area="" asp-controller="Home" asp-action="Index">DRAGON BALL Z</a>
+
+            <button class="dbz-nav-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#dbzMenu"
+                    aria-controls="dbzMenu" aria-expanded="false" aria-label="Abrir menú">
+                ☰
+            </button>
+
+            <div id="dbzMenu" class="collapse d-sm-flex dbz-menu">
+                <a class="dbz-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                <a class="dbz-link" asp-area="" asp-controller="DragonBallPlanets" asp-action="Index">Planetas</a>
+                <a class="dbz-link" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            </div>
+        </nav>
+        <div class="dbz-nav-glow"></div>
+    </header>
+
+    <!-- CONTENIDO -->
+    <div class="container dbz-container">
+        <main role="main" class="pb-4">
+            @RenderBody()
+        </main>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="dbz-footer">
+        <div class="container">
+            <span>&copy; @DateTime.Now.Year - Dragon Ball Z</span>
+            <span class="sep">•</span>
+            <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

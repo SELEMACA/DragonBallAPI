@@ -1,0 +1,221 @@
+﻿@using DragonBallZ.Models.DTOs
+@model PlanetsListVm
+@{
+    ViewData["Title"] = "Planetas";
+
+    var nameVal      = Model?.Name ?? "";
+    var destroyedVal = Model?.IsDestroyed;
+    var limitVal     = Model?.Limit ?? 10;
+
+    var currentPage  = Model?.Page ?? 1;
+    var totalPages   = Model?.Meta?.TotalPages ?? (Model?.HasNext == true ? currentPage + 1 : currentPage);
+    if (totalPages < 1) totalPages = 1;
+
+    var itemsCount   = Model?.Items?.Count ?? 0;
+    var pctByPages   = Math.Clamp((int)Math.Round(100.0 * currentPage / totalPages), 0, 100);
+    var pctByDensity = (limitVal > 0) ? Math.Clamp((int)Math.Round(100.0 * itemsCount / limitVal), 0, 100) : 100;
+    var pct          = (totalPages == 1) ? Math.Min(pctByPages, pctByDensity) : pctByPages;
+}
+
+<section class="container">
+  <header class="mb-2">
+    <h1 class="dbz-title">Planetas</h1>
+    <div class="dbz-subtitle">Explora el universo • @(Model?.Meta?.TotalItems ?? Model?.Items?.Count ?? 0) resultados aprox.</div>
+  </header>
+
+  <!-- KI Panel -->
+  <div class="panel ki-glow" id="kiPanel"
+       data-page="@currentPage"
+       data-total-pages="@totalPages"
+       data-items-count="@itemsCount"
+       data-limit="@limitVal"
+       style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
+    <div class="ki-counter">
+      <span class="label">Progreso</span>
+      <div class="power" style="width:min(480px, 60vw)">
+        <div id="kiFill" class="fill" style="width:0%"></div>
+      </div>
+      <span id="kiPct" class="percent">0%</span>
+    </div>
+    <div class="badge-blue">Página @currentPage / @totalPages</div>
+  </div>
+
+  <!-- Filtros -->
+  <form id="filterForm" method="get" class="mb-2" role="search" aria-label="Filtrar planetas">
+    <div class="dbz-search" style="margin-bottom:10px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" stroke-width="1.5"/>
+      </svg>
+      <input type="search" name="name" value="@nameVal" placeholder="Buscar por nombre…" />
+      <button class="dbz-btn" type="submit">Filtrar</button>
+    </div>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between">
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+        <label class="badge-blue" style="display:flex; gap:8px; align-items:center;">
+          Estado
+          <select name="isDestroyed" class="form-select form-select-sm" style="background:transparent; color:#fff; border:0; width:auto;">
+              <option value="" selected="@(destroyedVal is null ? "selected" : null)">Todos</option>
+              <option value="false" selected="@(destroyedVal == false ? "selected" : null)">Vigentes</option>
+              <option value="true" selected="@(destroyedVal == true ? "selected" : null)">Destruidos</option>
+          </select>
+        </label>
+
+        <label class="badge-ki" style="display:flex; gap:8px; align-items:center;">
+          Límite
+          <input type="number" name="limit" min="1" max="50" value="@limitVal"
+                 class="form-control form-control-sm" style="width:80px; border:0; background:transparent;" />
+        </label>
+
+        <a id="btnClear" class="dbz-btn blue" href="@Url.Action("Index", new { page = 1 })">Limpiar</a>
+      </div>
+
+      <div class="view-switch" aria-label="Cambiar vista">
+        <button type="button" id="btnCards" class="toggle active">Cards</button>
+        <button type="button" id="btnTable" class="toggle">Tabla</button>
+      </div>
+    </div>
+  </form>
+
+  <!-- Contenedor de resultados (se reemplaza por AJAX) -->
+    <div id="listHost">
+        @await Html.PartialAsync("_IndexContent", Model)
+    </div>
+</section>
+
+@section Scripts{
+<script>
+(function(){
+  // ---- util: animar KI desde datos del panel ----
+  function animateKiFrom(panel){
+    var fill = document.getElementById('kiFill');
+    var lbl  = document.getElementById('kiPct');
+    if(!panel || !fill || !lbl) return;
+    var page  = parseInt(panel.dataset.page||"1",10);
+    var total = parseInt(panel.dataset.totalPages||"1",10);
+    var cnt   = parseInt(panel.dataset.itemsCount||"0",10);
+    var lim   = parseInt(panel.dataset.limit||"10",10);
+
+    var target = Math.max(0, Math.min(100, Math.round(100 * page/Math.max(1,total))));
+    if(total === 1){
+      var dens = Math.max(0, Math.min(100, Math.round(100 * (lim>0? (cnt/lim) : 1))));
+      target = Math.min(target, dens);
+    }
+
+    var cur = 0, step = Math.max(1, Math.round(target/30));
+    fill.style.width = '0%'; lbl.textContent = '0%';
+    var t = setInterval(function(){
+      cur += step;
+      if(cur >= target){ cur = target; clearInterval(t); }
+      fill.style.width = cur + '%';
+      lbl.textContent  = cur + '%';
+    }, 16);
+  }
+  animateKiFrom(document.getElementById('kiPanel'));
+
+  // ---- persistencia cards/tabla ----
+  var btnCards  = document.getElementById('btnCards');
+  var btnTable  = document.getElementById('btnTable');
+  function setView(root, v){
+    var cards = root.querySelector('#viewCards');
+    var table = root.querySelector('#viewTable');
+    var isCards = (v==='cards');
+    if(cards) cards.style.display = isCards ? '' : 'none';
+    if(table) table.style.display = isCards ? 'none' : '';
+    btnCards?.classList.toggle('active', isCards);
+    btnTable?.classList.toggle('active', !isCards);
+    try{ localStorage.setItem('dbz_view', v); }catch(e){}
+  }
+  var pref = 'cards';
+  try{ pref = localStorage.getItem('dbz_view') || 'cards'; }catch(e){}
+  setView(document, pref);
+  btnCards?.addEventListener('click', function(){ setView(document, 'cards'); });
+  btnTable?.addEventListener('click', function(){ setView(document, 'table'); });
+
+  // ---- AJAX infra: reemplazar fragmento, actualizar KI, reactivar handlers ----
+  var listHost   = document.getElementById('listHost');
+  var filterForm = document.getElementById('filterForm');
+  var btnClear   = document.getElementById('btnClear');
+
+  async function loadUrl(url){
+    // asegura partial=1
+    var u = new URL(url, window.location.origin);
+    u.searchParams.set('partial','1');
+    const res = await fetch(u.toString(), { headers: { 'X-Requested-With':'fetch' } });
+    if(!res.ok){ console.warn('Error al cargar', res.status); return; }
+    const html = await res.text();
+    listHost.innerHTML = html;
+
+    // re-aplica vista preferida
+    setView(listHost, (localStorage.getItem('dbz_view') || 'cards'));
+
+    // enlaza clicks de paginación dentro del nuevo fragmento
+    wirePaging();
+
+    // actualiza/animar KI con los datos del fragmento
+    var frag = listHost.querySelector('#indexFragment');
+    var panel = document.getElementById('kiPanel');
+    if(frag && panel){
+      panel.dataset.page        = frag.dataset.page || "1";
+      panel.dataset.totalPages  = frag.dataset.totalPages || "1";
+      panel.dataset.itemsCount  = frag.dataset.itemsCount || "0";
+      panel.dataset.limit       = frag.dataset.limit || "10";
+      animateKiFrom(panel);
+    }
+  }
+
+  // intercepta paginación (links con .js-page dentro de listHost)
+  function wirePaging(){
+    listHost.querySelectorAll('a.js-page').forEach(function(a){
+      a.addEventListener('click', function(ev){
+        ev.preventDefault();
+        var href = a.getAttribute('href');
+        // pushState y fetch
+        history.pushState({ url: href }, '', href);
+        loadUrl(href);
+      });
+    });
+  }
+  wirePaging();
+
+  // intercepta submit del filtro
+  filterForm?.addEventListener('submit', function(ev){
+    ev.preventDefault();
+    var u = new URL(window.location.href);
+    // tomar valores del form
+    var fd = new FormData(filterForm);
+    ['name','isDestroyed','limit'].forEach(k=>{
+      var v = (fd.get(k)||'').toString();
+      if(v === '') u.searchParams.delete(k);
+      else u.searchParams.set(k, v);
+    });
+    // al filtrar, volvemos a page=1
+    u.searchParams.set('page','1');
+
+    history.pushState({ url: u.pathname + '?' + u.searchParams.toString() }, '', u);
+    loadUrl(u.toString());
+  });
+
+  // botón limpiar (sin recargar)
+  btnClear?.addEventListener('click', function(ev){
+    ev.preventDefault();
+    var base = new URL('@Url.Action("Index")', window.location.origin);
+    history.pushState({ url: base.pathname }, '', base.pathname);
+    loadUrl(base.toString());
+    // reset visual del form
+    try{
+      filterForm.querySelector('[name="name"]').value = '';
+      filterForm.querySelector('[name="isDestroyed"]').value = '';
+      filterForm.querySelector('[name="limit"]').value = '10';
+    }catch(e){}
+  });
+
+  // back/forward del navegador
+  window.addEventListener('popstate', function(ev){
+    var url = (ev.state && ev.state.url) ? ev.state.url : window.location.href;
+    loadUrl(url);
+  });
+
+})();
+</script>
+}

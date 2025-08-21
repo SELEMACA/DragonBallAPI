@@ -1,0 +1,53 @@
+# ==== .NET / ASP.NET Core ====
+bin/
+obj/
+[Bb]uild/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+
+# Artefactos
+*.dll
+*.exe
+*.pdb
+*.cache
+*.log
+*.tlog
+*.tmp
+*.temp
+
+# VS / IDEs
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.idea/
+*.iml
+.vscode/
+
+# SQLite/CodeChunks y similares
+*.db
+*.db-shm
+*.db-wal
+
+# Publicación/salida
+publish/
+out/
+
+# Web (ajusta según tu build)
+# Si generas bundles/minificados, ignóralos en carpetas de salida
+wwwroot/dist/
+wwwroot/**/dist/
+
+# Config locales (mantén appsettings.json base)
+appsettings.Development.json
+appsettings.*.local.json
+
+# Sistemas
+.DS_Store
+Thumbs.db
+ehthumbs.db

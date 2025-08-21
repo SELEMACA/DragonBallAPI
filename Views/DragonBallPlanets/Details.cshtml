@@ -1,0 +1,314 @@
+﻿@using DragonBallZ.Models.DTOs
+@model PlanetDetailsVm
+@{
+    ViewData["Title"] = $"Planeta: {Model?.Name ?? "Planeta"}";
+
+    int ParseInt(string? s)
+    {
+        if (string.IsNullOrWhiteSpace(s)) return 0;
+        var digits = new string(s.Where(char.IsDigit).ToArray());
+        if (long.TryParse(digits, out var n)) return (int)Math.Clamp(n, int.MinValue, int.MaxValue);
+        return 0;
+    }
+}
+
+<section class="container">
+    @if (Model is null || string.IsNullOrWhiteSpace(Model.Name))
+    {
+        <div class="dbz-card ki-glow" style="padding:16px;">
+            <div class="dbz-subtitle">Sin datos</div>
+            <p>No se pudo cargar la información del planeta.</p>
+        </div>
+    }
+    else
+    {
+
+    
+        <!-- HERO -->
+        <header class="hero scouter" aria-labelledby="planet-title">
+            <img src="@Model.Image" alt="Imagen de @Model.Name" onerror="this.style.visibility='hidden'" />
+            <div class="veil"></div>
+            <div class="content">
+                <h1 id="planet-title" class="dbz-title">@Model.Name</h1>
+                <div class="meta">
+                    <span class="badge-ki">ID @Model.Id</span>
+                    <span class="@(Model.IsDestroyed ? "chip bad" : "chip good")">
+                        @(Model.IsDestroyed ? "Destruido" : "Vigente")
+                    </span>
+                </div>
+            </div>
+        </header>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Description))
+        {
+            <section class="panel ki-glow" aria-labelledby="desc">
+                <h2 id="desc" class="dbz-subtitle">Descripción</h2>
+                <p class="desc" style="margin-top:6px">@Model.Description</p>
+            </section>
+        }
+
+        <!-- Toolbar: filtro + toggle vista -->
+        <div class="toolbar" style="display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; margin:18px 0 8px">
+            <label class="dbz-search" aria-label="Buscar personajes" style="flex:1 1 280px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" stroke-width="1.5" />
+                </svg>
+                <input id="filter" type="search" placeholder="Buscar por nombre, raza o afiliación…" autocomplete="off" />
+            </label>
+
+            <div class="view-switch" aria-label="Cambiar vista">
+                <button type="button" id="btnCards" class="toggle active">Cards</button>
+                <button type="button" id="btnTable" class="toggle">Tabla</button>
+            </div>
+        </div>
+
+        <!-- Contenido -->
+        @if (Model.Characters is null || !Model.Characters.Any())
+        {
+            <div class="dbz-card ki-glow" style="padding:16px;">
+                <div class="dbz-subtitle">Sin personajes</div>
+                <p>No hay personajes asociados.</p>
+            </div>
+        }
+        else
+        {
+            <!-- Vista Cards -->
+            <div id="viewCards" class="dbz-grid">
+                @foreach (var c in Model.Characters)
+                {
+                    var dataKey = $"{c.Name} {c.Race} {c.Affiliation}".ToLowerInvariant();
+                    var ki = ParseInt(c.Ki);
+                    var maxKi = Math.Max(1, ParseInt(c.MaxKi));
+                    var pct = Math.Clamp((int)Math.Round(100.0 * ki / maxKi), 0, 100);
+
+                    <article class="dbz-card scouter"
+                             data-key="@dataKey"
+                             data-name="@c.Name"
+                             data-image="@c.Image"
+                             data-ki="@c.Ki"
+                             data-maxki="@c.MaxKi"
+                             data-race="@c.Race"
+                             data-gender="@c.Gender"
+                             data-aff="@c.Affiliation"
+                             data-desc="@c.Description">
+                        <img class="thumb full" src="@c.Image" alt="Imagen de @c.Name" onerror="this.style.display='none'" />
+                        <div class="body">
+                            <div class="name">@c.Name</div>
+
+                            <div class="rows">
+                                <div class="row"><span>Ki</span><b>@(string.IsNullOrWhiteSpace(c.Ki) ? "—" : c.Ki)</b></div>
+                                <div class="row"><span>MaxKi</span><b>@(string.IsNullOrWhiteSpace(c.MaxKi) ? "—" : c.MaxKi)</b></div>
+                            </div>
+
+                            <div class="power" title="@(pct)% de poder"><div class="fill" style="width:@pct%"></div></div>
+
+                            <div class="tags" style="justify-content:space-between; align-items:center">
+                                <div style="display:flex; gap:8px; flex-wrap:wrap">
+                                    @if (!string.IsNullOrWhiteSpace(c.Race))
+                                    {
+                                        <span class="tag">@c.Race</span>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(c.Gender))
+                                    {
+                                        <span class="tag">@c.Gender</span>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(c.Affiliation))
+                                    {
+                                        <span class="tag">@c.Affiliation</span>
+                                    }
+                                </div>
+                                <button type="button" class="dbz-btn blue js-bio">Bio</button>
+                            </div>
+                        </div>
+                    </article>
+                }
+            </div>
+
+            <!-- Vista Tabla -->
+            <div id="viewTable" style="display:none;">
+                <table class="dbz-table" id="charsTable">
+                    <thead>
+                        <tr>
+                            <th data-col="id">Id</th>
+                            <th data-col="name">Nombre</th>
+                            <th data-col="ki">Ki</th>
+                            <th data-col="maxki">MaxKi</th>
+                            <th data-col="race">Raza</th>
+                            <th data-col="gender">Género</th>
+                            <th data-col="aff">Afiliación</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var c in Model.Characters)
+                        {
+                            <tr>
+                                <td>@c.Id</td>
+                                <td>@c.Name</td>
+                                <td>@(string.IsNullOrWhiteSpace(c.Ki) ? "—" : c.Ki)</td>
+                                <td>@(string.IsNullOrWhiteSpace(c.MaxKi) ? "—" : c.MaxKi)</td>
+                                <td>@c.Race</td>
+                                <td>@c.Gender</td>
+                                <td>@c.Affiliation</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Botón Volver -->
+            <div class="mb-3">
+                <button onclick="history.back()" class="btn btn-warning dbz-back-btn">⬅ Volver</button>
+            </div>
+        }
+    }
+</section>
+
+<!-- Drawer / Modal -->
+<div id="drawerBack" class="dbz-drawer-backdrop"></div>
+<aside id="drawer" class="dbz-drawer" aria-hidden="true" role="dialog" aria-label="Biografía de personaje">
+    <div class="dbz-drawer-header">
+        <div class="dbz-subtitle" id="drawerTitle">Personaje</div>
+        <button type="button" class="close" id="drawerClose">Cerrar</button>
+    </div>
+    <div class="dbz-drawer-body">
+        <img id="drawerImg" alt="" />
+        <div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px">
+                <span id="drawerRace" class="badge-ki"></span>
+                <span id="drawerAff" class="badge-blue"></span>
+            </div>
+            <div class="rows" style="margin-bottom:10px">
+                <div class="row"><span>Ki</span><b id="drawerKi"></b></div>
+                <div class="row"><span>MaxKi</span><b id="drawerMaxKi"></b></div>
+            </div>
+            <div class="power"><div id="drawerPower" class="fill" style="width:0%"></div></div>
+            <div style="margin-top:12px; line-height:1.6" id="drawerDesc"></div>
+        </div>
+    </div>
+</aside>
+
+@section Scripts {
+    <script>
+        (function(){
+          // --- filtro ---
+          const input = document.getElementById('filter');
+          const cards = document.getElementById('viewCards');
+          function filterCards(q){
+            if(!cards) return;
+            const query = (q||'').trim().toLowerCase();
+            for(const el of cards.children){
+              const key = (el.getAttribute('data-key') || '').toLowerCase();
+              el.style.display = (!query || key.includes(query)) ? '' : 'none';
+            }
+          }
+          input?.addEventListener('input', e => filterCards(e.target.value));
+
+          // --- toggle Cards/Tabla con persistencia ---
+          const btnCards = document.getElementById('btnCards');
+          const btnTable = document.getElementById('btnTable');
+          const viewCards = document.getElementById('viewCards');
+          const viewTable = document.getElementById('viewTable');
+          function setView(v){
+            const isCards = v==='cards';
+            if(viewCards) viewCards.style.display = isCards ? '' : 'none';
+            if(viewTable) viewTable.style.display = isCards ? 'none' : '';
+            btnCards?.classList.toggle('active', isCards);
+            btnTable?.classList.toggle('active', !isCards);
+            try{ localStorage.setItem('dbz_detail_view', v); }catch(e){}
+          }
+          setView(localStorage.getItem('dbz_detail_view') || 'cards');
+          btnCards?.addEventListener('click', ()=> setView('cards'));
+          btnTable?.addEventListener('click', ()=> setView('table'));
+
+          // --- drawer / modal ---
+          const back   = document.getElementById('drawerBack');
+          const drawer = document.getElementById('drawer');
+          const dTitle = document.getElementById('drawerTitle');
+          const dImg   = document.getElementById('drawerImg');
+          const dRace  = document.getElementById('drawerRace');
+          const dAff   = document.getElementById('drawerAff');
+          const dKi    = document.getElementById('drawerKi');
+          const dMaxKi = document.getElementById('drawerMaxKi');
+          const dPow   = document.getElementById('drawerPower');
+          const dDesc  = document.getElementById('drawerDesc');
+          const dClose = document.getElementById('drawerClose');
+
+          function pct(ki, maxKi){
+            const n = Math.max(0, Math.min(100, Math.round(100*ki/Math.max(1,maxKi))));
+            return n;
+          }
+
+          function openDrawer(from){
+            if(!from) return;
+            const name = from.dataset.name || 'Personaje';
+            const img  = from.dataset.image || '';
+            const ki   = from.dataset.ki || '—';
+            const mki  = from.dataset.maxki || '—';
+            const race = from.dataset.race || '';
+            const aff  = from.dataset.aff || '';
+            const desc = from.dataset.desc || '';
+
+            dTitle.textContent = name;
+            dImg.src = img; dImg.alt = 'Imagen de ' + name;
+            dKi.textContent = ki; dMaxKi.textContent = mki;
+            dRace.textContent = race || '—';
+            dAff.textContent  = aff  || '—';
+
+            // calcular % (solo dígitos)
+            const toN = s => (s||'').replace(/\D+/g,'') || '0';
+            const pv = Math.max(0, Math.min(100, Math.round(100* (parseInt(toN(ki),10) / Math.max(1, parseInt(toN(mki),10))))));
+            dPow.style.width = pv + '%';
+
+            dDesc.textContent = desc || 'Sin descripción';
+
+            back.style.display = 'block';
+            drawer.classList.add('open');
+            drawer.setAttribute('aria-hidden', 'false');
+            dClose.focus();
+          }
+
+          function closeDrawer(){
+            drawer.classList.remove('open');
+            drawer.setAttribute('aria-hidden', 'true');
+            back.style.display = 'none';
+          }
+
+          document.addEventListener('click', function(e){
+            const btn = e.target.closest('.js-bio');
+            if(btn){
+              const card = btn.closest('.dbz-card');
+              openDrawer(card);
+            }
+          });
+
+          dClose?.addEventListener('click', closeDrawer);
+          back?.addEventListener('click', closeDrawer);
+          window.addEventListener('keydown', e => { if(e.key==='Escape') closeDrawer(); });
+
+          // --- ordenar por columnas en tabla ---
+          (function(){
+            const tbl = document.getElementById('charsTable');
+            if(!tbl) return;
+            tbl.querySelectorAll('thead th').forEach((th, idx)=>{
+              th.addEventListener('click', ()=>{
+                const tbody = tbl.tBodies[0];
+                const rows = Array.from(tbody.rows);
+                const asc = th.dataset.sort !== 'asc';
+                tbl.querySelectorAll('thead th').forEach(h=>h.removeAttribute('data-sort'));
+                th.dataset.sort = asc ? 'asc':'desc';
+
+                rows.sort((a,b)=>{
+                  const A = a.cells[idx].innerText.trim();
+                  const B = b.cells[idx].innerText.trim();
+                  const nA = parseFloat(A.replace(/[^\d.-]+/g,''));
+                  const nB = parseFloat(B.replace(/[^\d.-]+/g,''));
+                  if(!isNaN(nA) && !isNaN(nB)) return asc ? (nA-nB) : (nB-nA);
+                  return asc ? A.localeCompare(B) : B.localeCompare(A);
+                });
+                rows.forEach(r=>tbody.appendChild(r));
+              });
+            });
+          })();
+        })();
+    </script>
+}

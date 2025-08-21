@@ -1,0 +1,46 @@
+﻿@{
+    ViewData["Title"] = "Política de Privacidad";
+}
+
+<section class="container" style="max-width:920px; margin:0 auto; padding:24px;">
+    <header class="text-center mb-4">
+        <h1 class="dbz-title">@ViewData["Title"]</h1>
+        <p class="dbz-subtitle">Transparencia, seguridad y propósito educativo</p>
+    </header>
+
+    <article class="dbz-card">
+        <h2 class="dbz-subtitle">Sobre mí</h2>
+        <p>
+            Mi nombre es <strong>Sergio Leonardo Martinez Castañeda</strong>, estudiante de <em>Ingeniería de Software</em>
+            en la <a href="https://umbvirtual.edu.co/" target="_blank" rel="noopener noreferrer">Universidad Manuela Beltrán</a>.
+            Este sitio es un proyecto académico (no comercial) construido con ASP.NET Core y Razor.
+        </p>
+    </article>
+
+ 
+
+    <article class="dbz-card">
+        <h2 class="dbz-subtitle">Sobre el Taller: “Consumo de API y Maquetación Web – Dragon Ball Planets”</h2>
+        <p><strong>Objetivo:</strong> desarrollar una página web dinámica que consuma una API externa y aplique buenas prácticas de maquetación moderna, mostrando datos de forma clara y accesible.</p>
+        <p><strong>Caso de uso:</strong> consumir la API de Dragon Ball para listar planetas (<code>GET /planets</code>) y ver su detalle (<code>GET /planets/{id}</code>) con navegación listado → detalle.</p>
+        <p><strong>Se revisa:</strong></p>
+        <ul>
+            <li>Consumo correcto de endpoints y renderizado con JavaScript/cliente.</li>
+            <li>HTML semántico, diseño responsive en grid y navegación entre vistas.</li>
+            <li>CSS organizado, código limpio/comentado y despliegue funcional.</li>
+            <li>Propuesta de look & feel del sitio.</li>
+        </ul>
+        <p><strong>Entregables:</strong> repositorio en GitHub + enlace público (Vercel/GitHub Pages/Netlify, etc.) con listado y detalle operativos.</p>
+        <p><strong>Tips:</strong> usar <code>fetch</code>, iterar correctamente la respuesta y recordar los dos endpoints (lista y detalle).</p>
+        <p class="mt-2"><small>Resumen elaborado a partir del documento del taller.</small></p>
+    </article>
+
+    <article class="dbz-card">
+        <h2 class="dbz-subtitle">Propiedad intelectual</h2>
+        <p>Este sitio es una práctica académica. Las marcas, personajes e imágenes de Dragon Ball Z pertenecen a sus respectivos titulares. Se usan únicamente con fines educativos.</p>
+    </article>
+
+    <footer class="text-center mt-4">
+        <p><small>© @DateTime.Now.Year — Proyecto académico de Sergio Leonardo Martinez Castañeda</small></p>
+    </footer>
+</section>
